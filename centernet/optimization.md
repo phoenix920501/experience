@@ -7,6 +7,7 @@
 5、resnet升级为resnext
 6、轻量级网络mobilenetv2，v3及变体移植到Centernet
 7、wh loss优化为集成坐标信息与IOU或GIOU信息的FocalLoss
+8、xception、shufflenet、densenet移植到Centernet
 
 注意：实验结果普遍高于论文结果可能的原因是：在训练数据集中除了voc、coco和object365等公开数据集外还加入了自己制作的数据集，这些数据集场景高度单一而且在训练集中占据很大的比例
 
