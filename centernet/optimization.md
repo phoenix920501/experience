@@ -116,7 +116,36 @@ Inception的loss图：
 
 注：1X指Bottleneck中expansion为1，2X指Bottleneck中expansion为2
 
-## 6、移动端mobilenet优化        
+## 6、xception
+基础网络：xception_v1:去除了exitFlow结构     
+         xception_v2:728 channel改512     
+         xception_v3:原生 728 channel     
+训练时长：100 epoch       
+
+|类型|参数|MAP|IOU=0.5|单帧速度(s)|
+|:-----:|:-----:|:-----:|:-----:|:-----:|
+|xception_v1+FPN+focalloss||0.298|0.616|0.056|  
+|xception_v2+FPN+focalloss|125.37M|0.453|0.803|0.096|  
+|xception_v2+FPN+focalloss|184.67M|0.487|0.811|0.041|
+
+## 7、shufflenet
+基础网络：shufflenet  
+训练时长：100 epoch       
+
+|类型|参数|MAP|IOU=0.5|单帧速度（s）|
+|:-----:|:-----:|:-----:|:-----:|:-----:|
+|shufflenet+FPN+focalloss|0.337|0.667|0.098|  
+
+
+## 8、densenet
+基础网络：densenet  
+训练时长：100 epoch       
+
+|类型|MAP|IOU=0.5|单帧速度（s）|
+|:-----:|:-----:|:-----:|:-----:|
+|densenet+FPN+focalloss|45.9|0.505|0.819 |0.056|  
+
+## 9、mobilenet       
    
 变化之处：    
 Mobilenet v2为原生，没有FPN     
@@ -147,6 +176,7 @@ Mobilenet v2_1和Mobile v3都增加了FPN层，提高模型准确度
 |Mobilenet v2|0.372|4.43ms|15.53ms|
 |Mobilenet v2+FPN|0.395| 4.31ms|16.10ms|
 |Mobilenet v2_1|0.429|4.46ms|16.37ms| 
+
 
 # centernet训练中GPU利用率不高，训练慢  
 
