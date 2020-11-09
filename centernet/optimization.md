@@ -184,7 +184,17 @@ Mobilenet v2_1和Mobile v3都增加了FPN层，提高模型准确度
 |Mobilenet v2_1|0.429|0.772| 0.073|
 |Mobilenet V3|0.343|0.653| 0.081|  
 
-## 10、jetflownet      
+## 10、efficientnet
+基础网络：efficientnet 
+训练时长：100 epoch       
+
+|类型|参数|MAP(MB)|IOU=0.5|单帧速度（s）|
+|:-----:|:-----:|:-----:|:-----:|:-----:|
+|efficientnet_b0+FPN+focalloss|16.62|0.421|0.758|0.082|
+|efficientnet_b4+FPN+focalloss|69.71|0.497|0.816 |0.108|
+|efficientnet_b6+FPN+focalloss|159.7|0.517|0.832|0.085|
+
+## 11、jetflownet      
 基础网络：深度可分离卷积,SE,FPN,densenet     
 训练时长：100 epoch       
 
