@@ -1,15 +1,16 @@
-# centernet网络结构优化
+# centernet网络结构优化     
 
-1、reg和wh分支合并   
-2、resnet融合FPN    
-3、GoogleNet中Inception结构移植到Centernet    
-4、bottleneck替换Resnet18中的basicblock   
-5、resnet升级为resnext    
-6、轻量级网络mobilenetv2，v3及变体移植到Centernet   
-7、wh loss优化为集成坐标信息与IOU或GIOU信息的FocalLoss   
-8、xception、shufflenet、densenet移植到Centernet    
+1、reg和wh分支合并    
+2、resnet融合FPN     
+3、GoogleNet中Inception结构移植到Centernet     
+4、bottleneck替换Resnet18中的basicblock    
+5、resnet升级为resnext     
+6、轻量级网络mobilenetv2，v3及变体移植到Centernet    
+7、wh loss优化为集成坐标信息与IOU或GIOU信息的FocalLoss     
+8、xception、shufflenet、densenet移植到Centernet       
+9、SE结构的使用，一是用FC做SE结构，二是用conv做SE结构       
 
-注意：实验结果普遍高于论文结果可能的原因是：在训练数据集中除了voc、coco和object365等公开数据集外还加入了自己制作的数据集，这些数据集场景高度单一而且在训练集中占据很大的比例
+注意：实验结果普遍高于论文结果可能的原因是：在训练数据集中除了voc、coco和object365等公开数据集外还加入了自己制作的数据集，这些数据集场景高度单一而且在训练集中占据很大的比例       
 
 ## CenterNet baseline    
 
@@ -23,7 +24,7 @@
 
 # 优化
 
-## 1、reg和wh分支合并
+## 1、reg和wh分支合并  
 在plate训练时遇到centernet检测效果不好的情况：     
 
 ![图1](pics/420.jpg)      
@@ -53,7 +54,7 @@ IOU：0.5
 
 训练50 epoch时，合并后的IOU=0.5和总的map为0.733和0.408，都高于原生的；训练100 epoch时，合并后的IOU=0.5的map为0.771，高于原生，总的map为0.456，略低于原生，所以应用时需要具体问题具体分析。     
 
-## 2、resnet+FPN   
+## 2、resnet+FPN      
 描述：在centernet三个反卷积层加入FPN结构，或者可以理解为一个更大范围内的残差结构      
 
 在16类数据集上训练实验结果：      
@@ -66,31 +67,47 @@ IOU：0.5
 |合并后| 0.456|0.771|0.035|
 |+FPN|0.480|0.803|0.05|   
 |+FPN+wh_focalloss|0.477|0.795|0.058|
+|+FPN+wh_focalloss+wh_gaussian|0.470|0.791|0.084|  
+|+FPN+wh_Giouloss+wh_gaussian2D|0.466|0.788|0.098|  
+|+FPN+wh_Giouloss+wh_radius|0.473|0.794|0.083|
+|+FPN+wh_Giouloss+wh_radius_2|0.474|0.795|0.070|
+|+FPN_1|0.488|0.810|0.072|
+|SE(FC)BasicBlock+FPN|0.401|0.728|0.072|   
+|SE(conv)BasicBlock+FPN|0.448|0.785| 0.093|    
 
-resnet+FPN的loss图：     
+注：    
+1、+FPN+wh_Giouloss+wh_gaussian2D：focalloss中iouloss更改为Giouloss，image中的gaussian2D更改为随着wh变化；             
+2、+FPN+wh_Giouloss+wh_radius：focalloss中iouloss更改为Giouloss，image中的radius更改为随着wh变化,变化的基线是wh计算出的斜边；               
+3、+FPN+wh_Giouloss+wh_radius_2：focalloss中iouloss更改为Giouloss，image中的radius更改为随着wh变化,变化的基线是wh中较长的边；            
+4、+FPN_1：改变FPN中特征融合的方式，用1*1卷积替代+；            
+5、SE(FC)BasicBlock+FPN：在BasicBlock中加入SE结构，SE为FC；        
+6、SE(conv)BasicBlock+FPN：在BasicBlock中加入SE结构，SE为conv；           
+    
+
+resnet+FPN的loss图：      
 
 ![图3](pics/fpn_loss.jpg)   
 
 ## 3、Inception  Block    
-描述：将block设置为googlenet V4中的inception结构，如下图：         
+描述：将block设置为googlenet V4中的inception结构，如下图：           
 
-![图4](pics/inception.png)    
+![图4](pics/inception.png)      
 
-在16类数据集上训练实验结果：      
-基础网络：inception_24      
-训练时长：100 epoch    
+在16类数据集上训练实验结果：        
+基础网络：inception_24        
+训练时长：100 epoch      
 
 |类型|MAP|IOU=0.5|单帧速度（s）|
 |:-----:|:-----:|:-----:|:-----:|
 |inception|0.463|0.769| 0.055|
 |inception+FPN|0.467|0.796| 0.037|
 
-Inception的loss图：      
+Inception的loss图：        
 
-![图5](pics/inception_loss.jpg)   
+![图5](pics/inception_loss.jpg)     
 
-## 4、bottleneck block
-描述：将block设置为bottleneck block结构,数量设置为[2,2,2,2]:
+## 4、bottleneck block       
+描述：将block设置为bottleneck block结构,数量设置为[2,2,2,2]:      
 
 在16类数据集上训练实验结果：      
 基础网络：resnet_26      
@@ -101,7 +118,13 @@ Inception的loss图：
 |原生|0.458|0.770| 0.035|
 |resnet_26|0.460|0.773|0.117|
 |resnet_26+FPN|0.470|0.784|0.067|     
-|resnet_26+FPN+wh_focalloss|0.492|0.797|0.071|      
+|resnet_26+FPN+wh_focalloss|0.492|0.797|0.071|  
+|SE(FC)Bottleneck+FPN|0.397|0.737 |0.097|  
+|SE(conv)Bottleneck+FPN|0.469|0.795|0.092|     
+
+注：    
+1、SE(FC)Bottleneck+FPN：在Bottleneck中加入SE结构，SE为FC；        
+2、SE(conv)Bottleneck+FPN：在Bottleneck中加入SE结构，SE为conv；      
 
 ## 5、resnext     
 描述：resnet升级版resnext;加入iouloss，与坐标回归loss形成focalloss           
@@ -115,12 +138,12 @@ Inception的loss图：
 |resnext_18+FPN+focalloss(1X)|0.416|0.724|0.067|  
 |resnext_18+FPN+focalloss(2X)|0.439|0.790|0.079|   
 
-注：1X指Bottleneck中expansion为1，2X指Bottleneck中expansion为2
+注：1X指Bottleneck中expansion为1，2X指Bottleneck中expansion为2        
 
 ## 6、xception
 基础网络：xception_v1:去除了exitFlow结构     
          xception_v2:728 channel改512     
-         xception_v3:原生 728 channel     
+         xception_v3:原生 728 channel       
 训练时长：100 epoch       
 
 |类型|参数|MAP|IOU=0.5|单帧速度(s)|
@@ -129,8 +152,8 @@ Inception的loss图：
 |xception_v2+FPN+focalloss|125.37M|0.453|0.803|0.096|  
 |xception_v2+FPN+focalloss|184.67M|0.487|0.811|0.041|
 
-## 7、shufflenet
-基础网络：shufflenet  
+## 7、shufflenet  
+基础网络：shufflenet    
 训练时长：100 epoch       
 
 |类型|MAP|IOU=0.5|单帧速度（s）|
@@ -139,7 +162,7 @@ Inception的loss图：
 
 
 ## 8、densenet
-基础网络：densenet  
+基础网络：densenet      
 训练时长：100 epoch       
 
 |类型|MAP|IOU=0.5|单帧速度（s）|
@@ -161,6 +184,18 @@ Mobilenet v2_1和Mobile v3都增加了FPN层，提高模型准确度
 |Mobilenet v2_1|0.429|0.772| 0.073|
 |Mobilenet V3|0.343|0.653| 0.081|  
 
+## 10、jetflownet      
+基础网络：深度可分离卷积,SE,FPN,densenet     
+训练时长：100 epoch       
+
+|类型|参数|MAP(MB)|IOU=0.5|单帧速度（s）|
+|:-----:|:-----:|:-----:|:-----:|:-----:|
+|30|40.62|0.467|0.787|0.049|
+|46|89.99|0.505|0.821|0.092|  
+|30+giou+gaussian|40.6|0.480|0.800|0.092|
+注：
+1、30+giou+gaussian：在第一卷积层采用了步长分别为1、3、5、7的卷积核；   
+
 # C++端测试结果：    
 条件：2080       
 
@@ -177,9 +212,9 @@ Mobilenet v2_1和Mobile v3都增加了FPN层，提高模型准确度
 |Mobilenet v2|0.372|4.43ms|15.53ms|
 |Mobilenet v2+FPN|0.395| 4.31ms|16.10ms|
 |Mobilenet v2_1|0.429|4.46ms|16.37ms| 
+    
 
-
-# centernet训练中GPU利用率不高，训练慢  
+# centernet训练中GPU利用率不高，训练慢     
 
 解决方案：      
 这是因为cpu操作太多，GPU等待数据，如果num_workers>0,开始多线程,那么torch.utils.data.DataLoader会报错DataLoader worker (pid 2287) is killed by signal: Killed. 可能原因是pytorch训练过程太费内存了，导致服务器内存不够，触发OS的保护机制，直接杀死了进程，目前的解决方法是创建docker时，加入--shm-size选项，例如：docker run --runtime=nvidia -e NVIDIA_VISIBLE_DEVICES=2,3 --shm-size 8G  -it --rm dev:v1 /bin/bash可以解决目前问题      
