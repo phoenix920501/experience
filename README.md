@@ -9,11 +9,31 @@
 如何理解目标检测中的channel？一般解释为，在降低特征图大小时，需要提高channel数量来保持模型的复杂度.但对channel的期待不仅仅是为了提高模型的复杂度，而是寄希望于channel能学习到图片中的景深信息.通俗理解为，类似于CT中各个切面的图片，希望channel可以把图片的平面信息还原到图片的立体信息，例如有个大象，现在有大象六个面的图片，通过channel学习到了大象的立体信息，现在这时候给一张大象的任何角度的图片，模型都可以实现对大象的准确识别，这时候channel就能使模型能力极大提升.现在的关键的是如何学习图片中物体的立体信息.能否用核函数代替神经元把图片还原到高维中学习特征，又或者直接设计特殊的网络结构学习这种立体信息
 
 ## 实验结果
-![图1](pics/1.png "图1")
-![图2](pics/2.png "图2")
+
+|模型|推理框架|模型细节|分辨率|MAP|显存占用(M)|单帧总时间(ms)|推理时间(ms)|后处理(ms)|预处理(ms)|其他|
+|:-----:|:-----:|:-----:|:-----:|:-----:|:-----:|:-----:|:-----:|:-----:|:-----:|:-----:|   
+|yolov3|darknet|baseline|416|33|1400|23|19|2|2|cuda10,GTX2080|   
+|yolov3|tensorrt|baseline|416|33|970|13|9|2|2|cuda10,GTX2080|
+|centernet|libtorch|dla-34|512|52.6|980|54|22|30|2|cuda10,GTX2080|
+|centernet|tensorrt|dla-34|512|52.6|1400|11.2|7.6|1.6|2|cuda10,GTX2080|
+
+
+|模型|batchsize|输入尺寸|推理时间(ms)|
+|:-----:|:-----:|:-----:|:-----:|
+|RegionLightXception|1|416|16.5|
+|RegionMobilenet|1|416|6.8|
+|RegionMobilenetv2|1|416|9.8|
+|RegionSqueezenet|1|416|21.2|
+|RegionXception|1|416|12.7|
+|RegionShufflenet|1|416|12.41|
+|RegionShufflenetv2|1|416|12.36|
+|TinyYolov2|1|416|3.7|
+|TinyYolov3|1|416|4.1|
+|Yolov2|1|416|8.7|
+|Yolov3|1|416|16.4|
+
 
 ## yolo results    
-
 1、[数据集统计信息](stat/readme.md)       
 2、[anchor实验结果](anchor/readme.md)（一阶段）  
 3、[anchor分层聚类统计信息](groupstat/readme.md)   
