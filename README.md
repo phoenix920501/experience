@@ -47,6 +47,9 @@
 
 1、[centernet网络结构优化](centernet/optimization.md)
 
+## detr results
+1、[detr网络结构优化](detr/readme.md)
+
 ## 模型转换
 
 1、[ckpt_to_pb](models/ckpt_to_pb/readme.md)             
